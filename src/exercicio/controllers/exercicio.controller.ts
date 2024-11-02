@@ -29,12 +29,6 @@ export class ExercicioController {
     return this.exercicioService.findByNome(nome);
   }
 
-  @Get('/categoriaid/:categoriaid')
-  @HttpCode(HttpStatus.OK)
-  findByCategoriaId(@Param('categoriaid') categoriaId: number): Promise<Exercicio[]> {
-    return this.exercicioService.findByCategoriaId(categoriaId);
-  }
-
   @Post()
   @HttpCode(HttpStatus.CREATED)
   post(@Body() exercicio: Exercicio): Promise<Exercicio> {

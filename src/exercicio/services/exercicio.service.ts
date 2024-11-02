@@ -50,21 +50,6 @@ export class ExercicioService {
     });
   }
 
-  async findByCategoriaId(categoriaId: number): Promise<Exercicio[]> {
-
-    let exercicios = await this.exercicioRepository.find({
-      where: {
-        categoria: { id: categoriaId },
-      },
-      relations: {
-        categoria: true,
-      },
-    });
-
-    return exercicios;
-
-  }
-
   async create(exercicio: Exercicio): Promise<Exercicio> {
     if (!exercicio.categoria)
       throw new HttpException(
