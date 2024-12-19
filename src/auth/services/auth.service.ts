@@ -45,6 +45,7 @@ export class AuthService{
             peso: buscaUsuario.peso,
             altura: buscaUsuario.altura,
             foto: buscaUsuario.foto,
+            imc: buscaUsuario.imc,
             token: `Bearer ${this.jwtService.sign(payload)}`,
         }
 

@@ -1,6 +1,7 @@
 ﻿import { ApiProperty } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
 import {
+  IsDateString,
     IsEmail,
     IsNotEmpty,
     IsNumber,
@@ -40,6 +41,11 @@ export class Usuario {
   @ApiProperty()
   foto: string;
 
+  @ApiProperty()
+  @IsDateString()
+  @Column({ type: 'date', nullable: false })
+  dataNascimento: Date;
+  
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNotEmpty()
   @IsPositive()
@@ -63,5 +69,14 @@ export class Usuario {
   })
   @ApiProperty()
   altura: number;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    transformer: new NumericTransformer(),
+  })
+  @ApiProperty()
+  imc: number;
   
 }

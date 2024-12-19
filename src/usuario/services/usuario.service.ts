@@ -43,6 +43,7 @@ export class UsuarioService {
 
     if (!buscaUsuario) {
       usuario.senha = await this.bcrypt.criptografarSenha(usuario.senha);
+      usuario.imc = await this.calcularIMC(usuario.peso, usuario.altura);
       return await this.usuarioRepository.save(usuario);
     }
 
@@ -62,17 +63,19 @@ export class UsuarioService {
       );
 
     usuario.senha = await this.bcrypt.criptografarSenha(usuario.senha);
+    usuario.imc = await this.calcularIMC(usuario.peso, usuario.altura);
+    
     return await this.usuarioRepository.save(usuario);
   }
 
-  async calcularIMC(id: number): Promise<number> {
+  async calcularIMC(peso: number, altura: number): Promise<number> {
 
-    const usuario = await this.findById(id)
-
-    if (usuario.altura > 0) {
-      return usuario.peso / (usuario.altura * usuario.altura);
+    if (altura > 0) {
+      return peso / (altura * altura);
     }
+
     return 0;
+
   }
 
 }
