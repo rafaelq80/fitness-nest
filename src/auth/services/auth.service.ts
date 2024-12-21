@@ -42,6 +42,7 @@ export class AuthService{
             nome: buscaUsuario.nome,
             usuario: usuarioLogin.usuario,
             senha: '',
+            dataNascimento: buscaUsuario.dataNascimento,
             peso: buscaUsuario.peso,
             altura: buscaUsuario.altura,
             foto: buscaUsuario.foto,
