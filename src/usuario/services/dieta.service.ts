@@ -9,7 +9,6 @@ import { lastValueFrom } from 'rxjs';
 @Injectable()
 export class DietaService {
   private readonly logger = new Logger(DietaService.name);
-  private readonly GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?';
 
   constructor(
     private readonly httpService: HttpService,
@@ -20,10 +19,12 @@ export class DietaService {
 
   async gerarDieta(id: number): Promise<{ refeicoes: any[]; totalCalorias: number }> {
     const usuario = await this.usuarioRepository.findOne({ where: { id } });
-    
+
     if (!usuario) {
       throw new HttpException('Usuário não encontrado', HttpStatus.NOT_FOUND);
     }
+
+    this.validarDadosUsuario(usuario);
 
     const prompt = this.criarPromptDieta(usuario);
     const resposta = await this.chamarGeminiAPI(prompt);
@@ -31,32 +32,55 @@ export class DietaService {
     return this.processarRespostaDieta(resposta);
   }
 
-  private criarPromptDieta(usuario: Usuario): string {
-    const idade = this.calcularIdade(usuario.dataNascimento);
-    const peso = usuario.peso;
-    const altura = usuario.altura;
-    let objetivo: string;
-
-    if (usuario.imc < 18.50) {
-      objetivo = 'Ganho de peso saudável';
-    } else if (usuario.imc < 24.90) {
-      objetivo = 'Manter o peso saudável';
-    } else if (usuario.imc < 29.90) {
-      objetivo = 'Reduzir a gordura corporal';
-    } else {
-      objetivo = 'Perda de peso significativa';
+  private validarDadosUsuario(usuario: Usuario): void {
+    if (!usuario.peso || !usuario.altura || !usuario.dataNascimento) {
+      throw new HttpException(
+        'Dados do usuário incompletos. Certifique-se de que peso, altura e data de nascimento estão preenchidos.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
+    if (usuario.peso <= 0 || usuario.altura <= 0) {
+      throw new HttpException(
+        'Peso e altura devem ser valores positivos.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  private criarPromptDieta(usuario: Usuario): string {
+    const idade = this.calcularIdade(usuario.dataNascimento);
+    const objetivo = this.definirObjetivo(usuario.imc);
+
     return `Crie um plano alimentar detalhado para uma pessoa com as seguintes características: 
-            Idade: ${idade} anos, Peso: ${peso.toFixed(2)} kg, Altura: ${altura.toFixed(2)} m, Objetivo: ${objetivo}. 
+            Idade: ${idade} anos, Peso: ${usuario.peso.toFixed(2)} kg, Altura: ${usuario.altura.toFixed(2)} m, Objetivo: ${objetivo}. 
             O plano deve incluir obrigatoriamente 6 refeições (café da manhã, lanche matinal, almoço, lanche da tarde, jantar, ceia). 
             Para cada refeição, indique: nome do prato, ingredientes, modo de preparo e total de calorias. 
             Use linguagem clara e direta. Formate a resposta em JSON.`;
   }
 
+  private definirObjetivo(imc: number): string {
+    if (imc < 18.50) {
+      return 'Ganho de peso saudável';
+    } else if (imc < 24.90) {
+      return 'Manter o peso saudável';
+    } else if (imc < 29.90) {
+      return 'Reduzir a gordura corporal';
+    } else {
+      return 'Perda de peso significativa';
+    }
+  }
+
   private async chamarGeminiAPI(prompt: string): Promise<string> {
     const API_KEY = this.configService.get<string>('API_KEY');
-    
+    if (!API_KEY) {
+      this.logger.error('Chave da API Gemini não configurada.');
+      throw new HttpException(
+        'Configuração de API inválida.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
     try {
       const requestBody = {
         contents: [
@@ -72,24 +96,17 @@ export class DietaService {
 
       const response = await lastValueFrom(
         this.httpService.post(
-          `${this.GEMINI_API_URL}key=${API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
           requestBody,
           {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
           },
         ),
       );
 
-      //this.logger.log(response.data);
-
       if (!response.data.candidates || response.data.candidates.length === 0) {
-        this.logger.warn('Nenhuma resposta válida recebida da API Gemini');
-        throw new HttpException(
-          'Sem respostas válidas',
-          HttpStatus.NO_CONTENT,
-        );
+        this.logger.warn('Nenhuma resposta válida recebida da API Gemini.');
+        throw new HttpException('Sem respostas válidas', HttpStatus.NO_CONTENT);
       }
 
       return response.data.candidates[0].content.parts[0].text;
@@ -102,19 +119,16 @@ export class DietaService {
     this.logger.error('Erro na chamada da API Gemini', error);
 
     if (error.response) {
-      // Erro com resposta do servidor
       throw new HttpException(
         error.response.data?.error || 'Erro na API Gemini',
         error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
       );
     } else if (error.request) {
-      // Erro sem resposta do servidor
       throw new HttpException(
         'Falha na comunicação com a API Gemini',
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     } else {
-      // Outros erros
       throw new HttpException(
         'Erro interno do servidor',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -129,68 +143,23 @@ export class DietaService {
       const jsonPlano = resposta.substring(inicioJson, fimJson);
 
       const planoAlimentar = JSON.parse(jsonPlano).planoAlimentar.refeicoes;
-      const refeicoes: any[] = [];
-      let totalCalories = 0;
+      const refeicoes = planoAlimentar.map((item) => ({
+        nome: item.nome,
+        prato: item.prato || 'Não informado',
+        ingredientes: Array.isArray(item.ingredientes)
+          ? item.ingredientes
+          : ['Não informado'],
+        modoPreparo: item.modoPreparo || 'Não informado',
+        calorias: parseFloat(
+          (item.calorias || '0')
+            .replace('Aproximadamente ', '')
+            .replace(' kcal', ''),
+        ),
+      }));
 
-      const refeicoesEsperadas = [
-        'Café da Manhã',
-        'Lanche Matinal',
-        'Almoço',
-        'Lanche da Tarde',
-        'Jantar',
-        'Ceia',
-      ];
+      const totalCalorias = refeicoes.reduce((acc, curr) => acc + (curr.calorias || 0), 0);
 
-      const refeicoesMap = new Map<string, any>();
-
-      for (const refeicaoEsperada of refeicoesEsperadas) {
-        let refeicaoEncontrada = false;
-
-        for (const item of planoAlimentar) {
-          if (item.nome === refeicaoEsperada) {
-            const mealDetails = {
-              nome: item.nome,
-              prato: item.prato,
-              ingredientes: Array.isArray(item.ingredientes)
-                ? item.ingredientes
-                : [item.ingredientes],
-              modoPreparo: item.modoPreparo,
-              calorias: parseFloat(
-                item.calorias
-                  .replace('Aproximadamente ', '')
-                  .replace(' kcal', ''),
-              ),
-            };
-
-            refeicoesMap.set(refeicaoEsperada, mealDetails);
-            totalCalories += mealDetails.calorias;
-            refeicaoEncontrada = true;
-            break;
-          }
-        }
-
-        if (!refeicaoEncontrada) {
-          refeicoesMap.set(refeicaoEsperada, {
-            nome: refeicaoEsperada,
-            prato: 'Não informado',
-            ingredientes: ['Não informado'],
-            modoPreparo: 'Não informado',
-            calorias: 0,
-          });
-        }
-      }
-
-      refeicoesEsperadas.forEach((refeicao) => {
-        const refeicaoDetails = refeicoesMap.get(refeicao);
-        if (refeicaoDetails) {
-          refeicoes.push(refeicaoDetails);
-        }
-      });
-
-      return {
-        refeicoes,
-        totalCalorias: totalCalories,
-      };
+      return { refeicoes, totalCalorias };
     } catch (error) {
       this.logger.error('Erro ao processar resposta da dieta', error);
       throw new HttpException(

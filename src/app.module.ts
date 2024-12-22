@@ -5,7 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { CategoriaModule } from './categoria/categoria.module';
-import { ProdService } from './data/services/prod.service';
+import { DevService } from './data/services/dev.service';
 import { ExercicioModule } from './exercicio/exercicio.module';
 import { UsuarioModule } from './usuario/usuario.module';
 
@@ -13,7 +13,7 @@ import { UsuarioModule } from './usuario/usuario.module';
   imports: [
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
-      useClass: ProdService,
+      useClass: DevService,
       imports: [ConfigModule],
     }),
     ExercicioModule,
