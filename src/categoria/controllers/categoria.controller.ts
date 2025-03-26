@@ -1,15 +1,27 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from "@nestjs/common";
-import { Categoria } from "../entities/categoria.entity";
-import { CategoriaService } from "../services/categoria.service";
-import { JwtAuthGuard } from "../../auth/guard/jwt-auth.guard";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
+import { Categoria } from '../entities/categoria.entity';
+import { CategoriaService } from '../services/categoria.service';
+import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Categoria')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller("/categorias")
+@Controller('/categorias')
 export class CategoriaController {
-  constructor(private readonly categoriaService: CategoriaService) { }
+  constructor(private readonly categoriaService: CategoriaService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -44,7 +56,6 @@ export class CategoriaController {
   @Delete('/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id', ParseIntPipe) id: number) {
-   return this.categoriaService.delete(id)
+    return this.categoriaService.delete(id);
   }
-
 }

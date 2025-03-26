@@ -5,17 +5,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   const config = new DocumentBuilder()
-  .setTitle('Projeto Aplicativo Fitness')
-  .setDescription('Projeto Aplicativo Fitness')
-  .setContact("Generation Brasil","https://brazil.generation.org","generation@email.com")
-  .setVersion('1.0')
-  .addBearerAuth()
-  .build();
+    .setTitle('Projeto Aplicativo Fitness')
+    .setDescription('Projeto Aplicativo Fitness')
+    .setContact(
+      'Rafael Queiróz',
+      'https://github.com/rafaelq80',
+      'rafaelproinfo@gmail.com',
+    )
+    .setVersion('2.0')
+    .addBearerAuth()
+    .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('/swagger', app, document);
-    
+
   process.env.TZ = '-03:00';
 
   app.useGlobalPipes(new ValidationPipe());
@@ -23,6 +27,5 @@ async function bootstrap() {
   app.enableCors();
 
   await app.listen(4000);
-
 }
 bootstrap();

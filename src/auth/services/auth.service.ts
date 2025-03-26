@@ -1,54 +1,54 @@
-﻿import { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { UsuarioService } from './../../usuario/services/usuario.service';
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Bcrypt } from '../bcrypt/bcrypt';
 import { UsuarioLogin } from '../entities/usuariologin.entity';
 
-
 @Injectable()
-export class AuthService{
-    constructor(
-        private usuarioService: UsuarioService,
-        private jwtService: JwtService,
-        private bcrypt: Bcrypt
-    ){ }
+export class AuthService {
+  constructor(
+    private usuarioService: UsuarioService,
+    private jwtService: JwtService,
+    private bcrypt: Bcrypt,
+  ) {}
 
-    async validateUser(username: string, password: string): Promise<any>{
+  async validateUser(username: string, password: string): Promise<any> {
+    const buscaUsuario = await this.usuarioService.findByUsuario(username);
 
-        const buscaUsuario = await this.usuarioService.findByUsuario(username)
+    if (!buscaUsuario)
+      throw new HttpException('Usuário não encontrado!', HttpStatus.NOT_FOUND);
 
-        if(!buscaUsuario)
-            throw new HttpException('Usuário não encontrado!', HttpStatus.NOT_FOUND)
+    const matchPassword = await this.bcrypt.compararSenhas(
+      password,
+      buscaUsuario.senha,
+    );
 
-        const matchPassword = await this.bcrypt.compararSenhas(password, buscaUsuario.senha)
-
-        if(buscaUsuario && matchPassword){
-            const { senha, ...resposta } = buscaUsuario
-            return resposta
-        }
-
-        return null
-
+    if (buscaUsuario && matchPassword) {
+      const { senha, ...resposta } = buscaUsuario;
+      return resposta;
     }
 
-    async login(usuarioLogin: UsuarioLogin){
+    return null;
+  }
 
-        const payload = { sub: usuarioLogin.usuario }
+  async login(usuarioLogin: UsuarioLogin) {
+    const payload = { sub: usuarioLogin.usuario };
 
-        const buscaUsuario = await this.usuarioService.findByUsuario(usuarioLogin.usuario)
+    const buscaUsuario = await this.usuarioService.findByUsuario(
+      usuarioLogin.usuario,
+    );
 
-        return{
-            id: buscaUsuario.id,
-            nome: buscaUsuario.nome,
-            usuario: usuarioLogin.usuario,
-            senha: '',
-            dataNascimento: buscaUsuario.dataNascimento,
-            peso: buscaUsuario.peso,
-            altura: buscaUsuario.altura,
-            foto: buscaUsuario.foto,
-            imc: buscaUsuario.imc,
-            token: `Bearer ${this.jwtService.sign(payload)}`,
-        }
-
-    }
+    return {
+      id: buscaUsuario.id,
+      nome: buscaUsuario.nome,
+      usuario: usuarioLogin.usuario,
+      senha: '',
+      dataNascimento: buscaUsuario.dataNascimento,
+      peso: buscaUsuario.peso,
+      altura: buscaUsuario.altura,
+      foto: buscaUsuario.foto,
+      imc: buscaUsuario.imc,
+      token: `Bearer ${this.jwtService.sign(payload)}`,
+    };
+  }
 }

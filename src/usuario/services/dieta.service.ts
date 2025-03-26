@@ -17,7 +17,9 @@ export class DietaService {
     private usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async gerarDieta(id: number): Promise<{ refeicoes: any[]; totalCalorias: number }> {
+  async gerarDieta(
+    id: number,
+  ): Promise<{ refeicoes: any[]; totalCalorias: number }> {
     const usuario = await this.usuarioRepository.findOne({ where: { id } });
 
     if (!usuario) {
@@ -60,11 +62,11 @@ export class DietaService {
   }
 
   private definirObjetivo(imc: number): string {
-    if (imc < 18.50) {
+    if (imc < 18.5) {
       return 'Ganho de peso saudável';
-    } else if (imc < 24.90) {
+    } else if (imc < 24.9) {
       return 'Manter o peso saudável';
-    } else if (imc < 29.90) {
+    } else if (imc < 29.9) {
       return 'Reduzir a gordura corporal';
     } else {
       return 'Perda de peso significativa';
@@ -136,7 +138,10 @@ export class DietaService {
     }
   }
 
-  private processarRespostaDieta(resposta: string): { refeicoes: any[]; totalCalorias: number } {
+  private processarRespostaDieta(resposta: string): {
+    refeicoes: any[];
+    totalCalorias: number;
+  } {
     try {
       const inicioJson = resposta.indexOf('{');
       const fimJson = resposta.lastIndexOf('}') + 1;
@@ -157,7 +162,10 @@ export class DietaService {
         ),
       }));
 
-      const totalCalorias = refeicoes.reduce((acc, curr) => acc + (curr.calorias || 0), 0);
+      const totalCalorias = refeicoes.reduce(
+        (acc, curr) => acc + (curr.calorias || 0),
+        0,
+      );
 
       return { refeicoes, totalCalorias };
     } catch (error) {

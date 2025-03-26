@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { Categoria } from '../../categoria/entities/categoria.entity';
 import { Exercicio } from '../../exercicio/entities/exercicio.entity';

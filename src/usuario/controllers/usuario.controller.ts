@@ -1,15 +1,15 @@
-﻿import {
-    Body,
-    Controller,
-    Get,
-    HttpCode,
-    HttpException,
-    HttpStatus,
-    Param,
-    ParseIntPipe,
-    Post,
-    Put,
-    UseGuards,
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
@@ -59,6 +59,7 @@ export class UsuarioController {
       const planoAlimentar = await this.dietaService.gerarDieta(id);
       return planoAlimentar;
     } catch (error) {
+      console.error('Erro: ', error);
       throw new HttpException('Erro ao gerar dieta', HttpStatus.BAD_REQUEST);
     }
   }

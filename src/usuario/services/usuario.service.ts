@@ -1,4 +1,4 @@
-﻿import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Bcrypt } from '../../auth/bcrypt/bcrypt';
@@ -25,10 +25,10 @@ export class UsuarioService {
   }
 
   async findById(id: number): Promise<Usuario> {
-    let usuario = await this.usuarioRepository.findOne({
+    const usuario = await this.usuarioRepository.findOne({
       where: {
         id,
-      }
+      },
     });
 
     if (!usuario)
@@ -38,8 +38,7 @@ export class UsuarioService {
   }
 
   async create(usuario: Usuario): Promise<Usuario> {
-    
-    let buscaUsuario = await this.findByUsuario(usuario.usuario);
+    const buscaUsuario = await this.findByUsuario(usuario.usuario);
 
     if (!buscaUsuario) {
       usuario.senha = await this.bcrypt.criptografarSenha(usuario.senha);
@@ -51,10 +50,9 @@ export class UsuarioService {
   }
 
   async update(usuario: Usuario): Promise<Usuario> {
-    
     await this.findById(usuario.id);
 
-    let buscaUsuario = await this.findByUsuario(usuario.usuario);
+    const buscaUsuario = await this.findByUsuario(usuario.usuario);
 
     if (buscaUsuario && buscaUsuario.id !== usuario.id)
       throw new HttpException(
@@ -64,18 +62,15 @@ export class UsuarioService {
 
     usuario.senha = await this.bcrypt.criptografarSenha(usuario.senha);
     usuario.imc = await this.calcularIMC(usuario.peso, usuario.altura);
-    
+
     return await this.usuarioRepository.save(usuario);
   }
 
   async calcularIMC(peso: number, altura: number): Promise<number> {
-
     if (altura > 0) {
       return peso / (altura * altura);
     }
 
     return 0;
-
   }
-
 }

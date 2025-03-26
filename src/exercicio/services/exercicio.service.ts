@@ -1,6 +1,12 @@
-import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, LessThanOrEqual, Like, MoreThanOrEqual, Repository } from 'typeorm';
+import { DeleteResult, Like, Repository } from 'typeorm';
 import { CategoriaService } from '../../categoria/services/categoria.service';
 import { Exercicio } from '../entities/exercicio.entity';
 
@@ -9,7 +15,8 @@ export class ExercicioService {
   constructor(
     @InjectRepository(Exercicio)
     private exercicioRepository: Repository<Exercicio>,
-    @Inject(forwardRef(() => CategoriaService)) private categoriaService: CategoriaService,
+    @Inject(forwardRef(() => CategoriaService))
+    private categoriaService: CategoriaService,
   ) {}
 
   async findAll(): Promise<Exercicio[]> {
@@ -21,7 +28,7 @@ export class ExercicioService {
   }
 
   async findById(id: number): Promise<Exercicio> {
-    let exercicio = await this.exercicioRepository.findOne({
+    const exercicio = await this.exercicioRepository.findOne({
       where: {
         id,
       },
@@ -87,5 +94,4 @@ export class ExercicioService {
 
     return await this.exercicioRepository.delete(id);
   }
-
 }

@@ -1,15 +1,27 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Put, UseGuards } from "@nestjs/common";
-import { Exercicio } from "../entities/exercicio.entity";
-import { ExercicioService } from "../services/exercicio.service";
-import { JwtAuthGuard } from "../../auth/guard/jwt-auth.guard";
-import { ApiTags, ApiBearerAuth } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
+import { Exercicio } from '../entities/exercicio.entity';
+import { ExercicioService } from '../services/exercicio.service';
+import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('Exercicio')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
-@Controller("/exercicios")
+@Controller('/exercicios')
 export class ExercicioController {
-  constructor(private readonly exercicioService: ExercicioService) { }
+  constructor(private readonly exercicioService: ExercicioService) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -46,5 +58,4 @@ export class ExercicioController {
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.exercicioService.delete(id);
   }
-
 }

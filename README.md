@@ -10,7 +10,7 @@
 
 ## 1. Descrição
 
-Um aplicativo fitness é uma plataforma digital que auxilia os usuários na prática de atividades físicas e na gestão de sua saúde. Com funções como monitoramento de exercícios, registro de alimentação, acompanhamento de objetivos e suporte para um estilo de vida mais ativo, os aplicativos fitness são projetados para facilitar a prática de atividades físicas e promover hábitos saudáveis.
+Um **Aplicativo Fitness** é uma plataforma digital que auxilia os usuários na prática de atividades físicas e na gestão de sua saúde. Com funções como monitoramento de exercícios, registro de alimentação, acompanhamento de objetivos e suporte para um estilo de vida mais ativo e saudável, os aplicativos fitness são projetados para facilitar a prática de atividades físicas e promover hábitos saudáveis.
 
 ### 1.1. Principais Funcionalidades
 
@@ -34,16 +34,19 @@ Os aplicativos fitness são uma solução versátil para qualquer nível de usu�
 
 ## 2. Sobre esta API
 
-Esta API foi desenvolvida utilizando NestJS para criar a estrutura  básica de um sistema de caronas compartilhadas. Ela fornece endpoints  para gerenciar usuários, categorias e exercícios, além de calcular o IMC (Índice de Massa Corporal), com base no peso e altura do usuário.
+O **Projeto Aplicativo Fitness** foi desenvolvido utilizando o Framework **NestJS** e a linguagem **TypeScript** para criar a estrutura  básica de um sistema de Aplicativo Fitness. Ela fornece endpoints  para gerenciar os Recursos **Usuário, Categoria e Exercício**, além de efetuar o calculo do IMC (Índice de Massa Corporal), com base no peso e altura do usuário e gerar um Plano de Dieta, com base nos objetivos do usuário.
 
-Esta API é um Mínimo Produto Viável (MVP) de um aplicativo Fitness.
+<br />
 
 ### 2.1. Principais Funcionalidades
 
-1. Cadastro e gerenciamento de usuários
-2. Registro e gerenciamento de categorias
-3. Criação e gerenciamento de exercícios
+1. Cadastro e gerenciamento dos usuários
+2. Registro e gerenciamento das categorias
+3. Criação e gerenciamento dos exercícios
 4. Cálculo do IMC (Índice de Massa Corporal)
+5. Geração de Plano de Dieta
+
+<br />
 
 ### 2.2. Cálculo do IMC
 
@@ -62,15 +65,40 @@ O resultado é classificado em categorias, que indicam se a pessoa está abaixo 
 | Entre 18,6 e 24,9 | Normal              | Que bom que você está com o peso normal! E o melhor jeito de continuar  assim é mantendo um estilo de vida ativo e uma alimentação equilibrada. |
 | 18,5 ou menos     | Abaixo do normal    | Procure um médico. Algumas pessoas têm um baixo peso por características do seu organismo e tudo bem. Outras podem estar enfrentando problemas, como a  desnutrição. É preciso saber qual é o caso. |
 
-------
+<br />
 
-## 3. Diagrama de Classes
+### 2.3. Geração do Plano de Dietas
+
+Para gerar o Plano de Dieta, será utilizada a API do Google Gemini. 
+
+<br />
+
+## 3. Integração com a API - Google Gemini
+
+
+O **Google Gemini** é uma família de modelos de inteligência artificial (IA) desenvolvida pelo Google DeepMind. Ele é projetado para processar múltiplos tipos de dados (texto, imagem, áudio e código) e pode ser utilizado em diversas aplicações, como assistentes virtuais, geração de texto, análise de imagens e mais.
+
+A API do **Google Gemini** será utilizada pelo no Projeto Aplicativo Fitness para gerar um Plano de Dietas para o usuário, de acordo com o IMC e o objetivo do usuário.
+
+<br />
+
+
+### 3.1. Passos para integração com a API do Gemini:
+
+1. Criar um projeto no [Google Cloud Console](https://console.cloud.google.com)
+2. Ativar a **API do Gemini** e gerar uma **chave de API (APi KEY)**
+3. Adicionar a chave de API e a URL da API em variáveis de ambiente no Projeto Aplicativo Fitness
+
+<br />
+
+## 4. Diagrama de Classes
 
 ```mermaid
 classDiagram
 class Categoria {
   - id : number
   - descricao : string
+  - icone : string
   - exercicio : []Exercicio
   + findAll()
   + findById(id : number)
@@ -84,12 +112,11 @@ class Exercicio {
   - nome : string
   - tempo : number
   - serie : number
-  - repeticoes: number
+  - repeticao: number
   - peso : number
   - descanso: number
   - foto: string
   - categoria : Categoria
-  - usuario : Usuario
   + findAll()
   + findById(id : number)
   + findByNome(nome : string)
@@ -103,8 +130,10 @@ class Usuario {
   - usuario : string
   - senha : string
   - foto : string
+  - dataNascimento : Date
   - peso : number
   - altura : number
+  - imc : number
   + findAll()
   + findById(id : number)
   + create(usuario : Usuario)
@@ -117,35 +146,60 @@ class UsuarioLogin{
   - usuario : string
   - senha : string
   - foto : string
+  - dataNascimento : Date
   - peso : number
   - altura : number
+  - imc : number
   - token : string
 }
 Categoria --> Exercicio
 ```
 
-**Observações Importantes:**
+*O atributo imc, da entidade Usuário, é um campo calculado.*
 
-- O peso do usuário será expresso em Quilogramas (Kg)
-- A Altura do usuário será expressa em Metros (m)
-- O peso utilizado pelo usuário no exercício será expresso em Quilogramas (Kg)
-- O tempo de execução do exercício será expresso em Minutos (m)
-- O numero de Séries e Repetições serão expressos em números inteiros positivos
+<br />
 
-------
-
-## 4. Diagrama Entidade-Relacionamento (DER)
+## 5. Diagrama Entidade-Relacionamento (DER)
 
 
 
-<div align="center">
-    <img src="https://i.imgur.com/4qCUk9m.png" title="source: imgur.com" />
-</div>
+```mermaid
+erDiagram
+    CATEGORIA o|--o{ EXERCICIO : classifica
+    CATEGORIA {
+        int id PK
+        varchar(255) descricao
+        varchar(5000) icone
+    }
+    EXERCICIO {
+		int id PK
+		varchar(255) nome
+		int tempo
+		int serie
+		int repeticao
+		int peso
+		int descanso
+		varchar(5000) foto
+		int categoria_id FK
+    }
+    USUARIO {
+		int id PK
+		varchar(255) nome
+		varchar(255) usuario
+		varchar(255) senha
+		varchar(5000) foto
+		date dataNascimento
+		decimal peso
+		decimal altura
+		decimal imc
+    }
 
 
-------
+```
 
-## 5. Tecnologias utilizadas
+<br />
+
+## 6. Tecnologias utilizadas
 
 | Item                          | Descrição  |
 | ----------------------------- | ---------- |
@@ -155,12 +209,11 @@ Categoria --> Exercicio
 | **ORM**                       | TypeORM    |
 | **Banco de dados Relacional** | MySQL      |
 
-------
+<br />
 
-## 6. Configuração e Execução
+## 7. Configuração e Execução
 
 1. Clone o repositório
 2. Instale as dependências: `npm install`
 3. Configure o banco de dados no arquivo `app.module.ts`
 4. Execute a aplicação: `npm run start:dev`
-

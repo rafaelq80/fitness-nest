@@ -1,11 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsPositive, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, Min } from 'class-validator';
 import { Categoria } from 'src/categoria/entities/categoria.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'tb_exercicios' })
 export class Exercicio {
-
   @PrimaryGeneratedColumn()
   @ApiProperty()
   id: number;
@@ -18,21 +17,21 @@ export class Exercicio {
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Column({ type: 'int', default: 0})
+  @Column({ type: 'int', default: 0 })
   @ApiProperty()
   tempo: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Column({ type: 'int', default: 0})
+  @Column({ type: 'int', default: 0 })
   @ApiProperty()
   serie: number;
 
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Column({ type: 'int', default: 0})
+  @Column({ type: 'int', default: 0 })
   @ApiProperty()
   repeticao: number;
 
@@ -46,7 +45,7 @@ export class Exercicio {
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Column({ type: 'int', default: 0})
+  @Column({ type: 'int', default: 0 })
   @ApiProperty()
   descanso: number;
 
@@ -59,5 +58,4 @@ export class Exercicio {
   })
   @ApiProperty({ type: () => Categoria })
   categoria: Categoria;
-
 }

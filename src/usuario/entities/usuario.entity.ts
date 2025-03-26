@@ -1,19 +1,18 @@
-﻿import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform, TransformFnParams } from 'class-transformer';
 import {
   IsDateString,
-    IsEmail,
-    IsNotEmpty,
-    IsNumber,
-    IsPositive,
-    MinLength,
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  MinLength,
 } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { NumericTransformer } from '../../util/numerictransformer';
 
 @Entity({ name: 'tb_usuarios' })
 export class Usuario {
-
   @PrimaryGeneratedColumn()
   @ApiProperty()
   id: number;
@@ -45,7 +44,7 @@ export class Usuario {
   @IsDateString()
   @Column({ type: 'date', nullable: false })
   dataNascimento: Date;
-  
+
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsNotEmpty()
   @IsPositive()
@@ -78,5 +77,4 @@ export class Usuario {
   })
   @ApiProperty()
   imc: number;
-  
 }
