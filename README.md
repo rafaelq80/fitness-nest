@@ -30,7 +30,7 @@ Um **Aplicativo Fitness** é uma plataforma digital que auxilia os usuários na 
 
 Os aplicativos fitness são uma solução versátil para qualquer nível de usuário, oferecendo flexibilidade para acompanhar e ajustar a prática de exercícios e a alimentação de forma prática e interativa.
 
-------
+<br />
 
 ## 2. Sobre esta API
 
