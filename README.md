@@ -1,4 +1,4 @@
-# Projeto Aplicativo Fitness
+# Projeto Aplicativo Fitness - Backend
 
 <br />
 
@@ -30,7 +30,7 @@ Um **Aplicativo Fitness** é uma plataforma digital que auxilia os usuários na 
 
 Os aplicativos fitness são uma solução versátil para qualquer nível de usuário, oferecendo flexibilidade para acompanhar e ajustar a prática de exercícios e a alimentação de forma prática e interativa.
 
-------
+<br />
 
 ## 2. Sobre esta API
 
@@ -51,9 +51,11 @@ O **Projeto Aplicativo Fitness** foi desenvolvido utilizando o Framework **NestJ
 ### 2.2. Cálculo do IMC
 
 O IMC, ou Índice de Massa Corporal, é uma medida usada para avaliar se uma pessoa está dentro de uma faixa de peso saudável em relação à sua altura. É calculado dividindo-se o peso (em quilogramas) pela altura (em metros) elevada ao quadrado. A fórmula é:
+
 $$
 IMC= \frac{\text{peso (kg)}}{\text{altura (m)}^2}
 $$
+
 O resultado é classificado em categorias, que indicam se a pessoa está abaixo do peso, com peso normal, sobrepeso ou obesidade, como mostra a tabela abaixo:
 
 | IMC               | Classificação       | Descrição                                                    |
