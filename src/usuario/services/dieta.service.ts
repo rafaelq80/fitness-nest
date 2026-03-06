@@ -98,10 +98,11 @@ export class DietaService {
 
       const response = await lastValueFrom(
         this.httpService.post(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
           requestBody,
           {
             headers: { 'Content-Type': 'application/json' },
+            timeout: 30000,
           },
         ),
       );
