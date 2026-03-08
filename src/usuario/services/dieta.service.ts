@@ -17,9 +17,7 @@ export class DietaService {
     private usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async gerarDieta(
-    id: number,
-  ): Promise<{ refeicoes: any[]; totalCalorias: number }> {
+  async gerarDieta(id: number): Promise<{ refeicoes: any[]; totalCalorias: number }> {
     const usuario = await this.usuarioRepository.findOne({ where: { id } });
 
     if (!usuario) {
@@ -29,7 +27,7 @@ export class DietaService {
     this.validarDadosUsuario(usuario);
 
     const prompt = this.criarPromptDieta(usuario);
-    const resposta = await this.chamarGeminiAPI(prompt);
+    const resposta = await this.chamarGroqAPI(prompt);
 
     return this.processarRespostaDieta(resposta);
   }
@@ -54,127 +52,109 @@ export class DietaService {
     const idade = this.calcularIdade(usuario.dataNascimento);
     const objetivo = this.definirObjetivo(usuario.imc);
 
-    return `Crie um plano alimentar detalhado para uma pessoa com as seguintes características: 
-            Idade: ${idade} anos, Peso: ${usuario.peso.toFixed(2)} kg, Altura: ${usuario.altura.toFixed(2)} m, Objetivo: ${objetivo}. 
-            O plano deve incluir obrigatoriamente 6 refeições (café da manhã, lanche matinal, almoço, lanche da tarde, jantar, ceia). 
-            Para cada refeição, indique: nome do prato, ingredientes, modo de preparo e total de calorias. 
-            Use linguagem clara e direta. Formate a resposta em JSON.`;
+    return `Crie um plano alimentar detalhado para uma pessoa com as seguintes características:
+Idade: ${idade} anos, Peso: ${usuario.peso.toFixed(2)} kg, Altura: ${usuario.altura.toFixed(2)} m, Objetivo: ${objetivo}.
+O plano deve incluir obrigatoriamente 6 refeições (café da manhã, lanche matinal, almoço, lanche da tarde, jantar, ceia).
+Para cada refeição, indique: nome do prato, ingredientes, modo de preparo e total de calorias.
+Use linguagem clara e direta. Responda APENAS com JSON válido, sem texto adicional, no seguinte formato:
+{
+  "planoAlimentar": {
+    "refeicoes": [
+      {
+        "nome": "Café da Manhã",
+        "prato": "Nome do prato",
+        "ingredientes": ["ingrediente 1", "ingrediente 2"],
+        "modoPreparo": "Descrição do preparo",
+        "calorias": 350
+      }
+    ]
+  }
+}`;
   }
 
   private definirObjetivo(imc: number): string {
-    if (imc < 18.5) {
-      return 'Ganho de peso saudável';
-    } else if (imc < 24.9) {
-      return 'Manter o peso saudável';
-    } else if (imc < 29.9) {
-      return 'Reduzir a gordura corporal';
-    } else {
-      return 'Perda de peso significativa';
-    }
+    if (imc < 18.5) return 'Ganho de peso saudável';
+    if (imc < 24.9) return 'Manter o peso saudável';
+    if (imc < 29.9) return 'Reduzir a gordura corporal';
+    return 'Perda de peso significativa';
   }
 
-  private async chamarGeminiAPI(prompt: string): Promise<string> {
-    const API_KEY = this.configService.get<string>('API_KEY');
-    if (!API_KEY) {
-      this.logger.error('Chave da API Gemini não configurada.');
-      throw new HttpException(
-        'Configuração de API inválida.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+  private async chamarGroqAPI(prompt: string): Promise<string> {
+    const apiKey = this.configService.get<string>('GROQ_API_KEY');
+    const apiUrl = this.configService.get<string>('GROQ_API_URL');
+    const model = this.configService.get<string>('GROQ_MODEL');
+
+    if (!apiKey || !apiUrl) {
+      this.logger.error('Configurações da API Groq não encontradas.');
+      throw new HttpException('Configuração de API inválida.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     try {
-      const requestBody = {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt,
-              },
-            ],
-          },
-        ],
-      };
-
       const response = await lastValueFrom(
         this.httpService.post(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
-          requestBody,
+          apiUrl,
           {
-            headers: { 'Content-Type': 'application/json' },
+            model: model || 'llama-3.3-70b-versatile',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.7,
+            response_format: { type: 'json_object' },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
             timeout: 30000,
           },
         ),
       );
 
-      if (!response.data.candidates || response.data.candidates.length === 0) {
-        this.logger.warn('Nenhuma resposta válida recebida da API Gemini.');
-        throw new HttpException('Sem respostas válidas', HttpStatus.NO_CONTENT);
+      const content = response.data?.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new HttpException('Sem resposta válida da API Groq.', HttpStatus.NO_CONTENT);
       }
 
-      return response.data.candidates[0].content.parts[0].text;
-    } catch (error) {
-      this.handleGeminiAPIError(error);
-    }
-  }
+      return content;
+    } catch (error: any) {
+      if (error instanceof HttpException) throw error;
 
-  private handleGeminiAPIError(error: any): never {
-    this.logger.error('Erro na chamada da API Gemini', error);
+      this.logger.error('Erro na chamada da API Groq', error?.response?.data ?? error.message);
 
-    if (error.response) {
+      if (error.response) {
+        throw new HttpException(
+          error.response.data?.error?.message || 'Erro na API Groq',
+          error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       throw new HttpException(
-        error.response.data?.error || 'Erro na API Gemini',
-        error.response.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    } else if (error.request) {
-      throw new HttpException(
-        'Falha na comunicação com a API Gemini',
+        'Falha na comunicação com a API Groq',
         HttpStatus.SERVICE_UNAVAILABLE,
       );
-    } else {
-      throw new HttpException(
-        'Erro interno do servidor',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
     }
   }
 
-  private processarRespostaDieta(resposta: string): {
-    refeicoes: any[];
-    totalCalorias: number;
-  } {
+  private processarRespostaDieta(resposta: string): { refeicoes: any[]; totalCalorias: number } {
     try {
-      const inicioJson = resposta.indexOf('{');
-      const fimJson = resposta.lastIndexOf('}') + 1;
-      const jsonPlano = resposta.substring(inicioJson, fimJson);
+      const planoAlimentar = JSON.parse(resposta).planoAlimentar.refeicoes;
 
-      const planoAlimentar = JSON.parse(jsonPlano).planoAlimentar.refeicoes;
       const refeicoes = planoAlimentar.map((item) => ({
         nome: item.nome,
         prato: item.prato || 'Não informado',
-        ingredientes: Array.isArray(item.ingredientes)
-          ? item.ingredientes
-          : ['Não informado'],
+        ingredientes: Array.isArray(item.ingredientes) ? item.ingredientes : ['Não informado'],
         modoPreparo: item.modoPreparo || 'Não informado',
-        calorias: parseFloat(
-          (item.calorias || '0')
-            .replace('Aproximadamente ', '')
-            .replace(' kcal', ''),
-        ),
+        calorias: typeof item.calorias === 'number'
+          ? item.calorias
+          : parseFloat(String(item.calorias).replace(/[^\d.]/g, '')) || 0,
       }));
 
-      const totalCalorias = refeicoes.reduce(
-        (acc, curr) => acc + (curr.calorias || 0),
-        0,
-      );
+      const totalCalorias = refeicoes.reduce((acc, curr) => acc + curr.calorias, 0);
 
       return { refeicoes, totalCalorias };
     } catch (error) {
       this.logger.error('Erro ao processar resposta da dieta', error);
-      throw new HttpException(
-        'Falha ao processar resposta da dieta',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      throw new HttpException('Falha ao processar resposta da dieta', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

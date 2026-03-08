@@ -69,27 +69,25 @@ O resultado é classificado em categorias, que indicam se a pessoa está abaixo 
 
 <br />
 
-### 2.3. Geração do Plano de Dietas
+## 3. Integração com a API - Groq
 
-Para gerar o Plano de Dieta, será utilizada a API do Google Gemini. 
+O Groq é uma plataforma de inferência de inteligência artificial de alta velocidade, que disponibiliza modelos de linguagem open-source como o **LLaMA da Meta** por meio de uma API compatível com o padrão OpenAI. Ele se destaca pela baixa latência e pela generosa camada gratuita, sem restrições por região.
 
-<br />
+A API do Groq será utilizada no Projeto Aplicativo Fitness para gerar um Plano de Dietas personalizado para o usuário, de acordo com seu IMC e objetivo.
 
-## 3. Integração com a API - Google Gemini
+No modelo Gratuíto, cada geração de dieta consumirá em torno de 1.000–2.000 tokens, permitindo gerar de 50 a 100 dietas por dia.
 
+### 3.1. Passos para integração com a API do Groq:
 
-O **Google Gemini** é uma família de modelos de inteligência artificial (IA) desenvolvida pelo Google DeepMind. Ele é projetado para processar múltiplos tipos de dados (texto, imagem, áudio e código) e pode ser utilizado em diversas aplicações, como assistentes virtuais, geração de texto, análise de imagens e mais.
+1. Criar uma conta em [console.groq.com](https://console.groq.com)
+2. Gerar uma chave de API na seção **API Keys**
+3. Adicionar as seguintes variáveis de ambiente no Projeto Aplicativo Fitness:
 
-A API do **Google Gemini** será utilizada pelo no Projeto Aplicativo Fitness para gerar um Plano de Dietas para o usuário, de acordo com o IMC e o objetivo do usuário.
-
-<br />
-
-
-### 3.1. Passos para integração com a API do Gemini:
-
-1. Criar um projeto no [Google Cloud Console](https://console.cloud.google.com)
-2. Ativar a **API do Gemini** e gerar uma **chave de API (APi KEY)**
-3. Adicionar a chave de API e a URL da API em variáveis de ambiente no Projeto Aplicativo Fitness
+```env
+GROQ_API_KEY=sua_chave_aqui
+GROQ_API_URL=https://api.groq.com/openai/v1/chat/completions
+GROQ_MODEL=llama-3.3-70b-versatile
+```
 
 <br />
 
